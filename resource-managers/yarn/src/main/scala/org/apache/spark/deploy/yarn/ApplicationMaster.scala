@@ -257,7 +257,7 @@ private[spark] class ApplicationMaster(
           }
         }
       }
-
+      //核心方法
       if (isClusterMode) {
         runDriver()
       } else {
@@ -486,6 +486,7 @@ private[spark] class ApplicationMaster(
 
   private def runDriver(): Unit = {
     addAmIpFilter(None, System.getenv(ApplicationConstants.APPLICATION_WEB_PROXY_BASE_ENV))
+    //核心方法，开启一个线程去执行 --class 中的main方法
     userClassThread = startUserApplication()
 
     // This a bit hacky, but we need to wait until the spark.driver.port property has
@@ -501,6 +502,8 @@ private[spark] class ApplicationMaster(
         val userConf = sc.getConf
         val host = userConf.get(DRIVER_HOST_ADDRESS)
         val port = userConf.get(DRIVER_PORT)
+        //核心方法 向yarn 注册AM，主要是分配资源，创建executor对象，然后采用一个线程去使用java command 启动executor（ExecutorRunnable.run().prepareCommand）
+        //这里启动的类叫CoarseGrainedExecutorBackend
         registerAM(host, port, userConf, sc.ui.map(_.webUrl), appAttemptId)
 
         val driverRef = rpcEnv.setupEndpointRef(
@@ -513,6 +516,7 @@ private[spark] class ApplicationMaster(
         throw new IllegalStateException("User did not initialize spark context!")
       }
       resumeDriver()
+      //等待 --class 中main方法的执行完成
       userClassThread.join()
     } catch {
       case e: SparkException if e.getCause().isInstanceOf[TimeoutException] =>
@@ -833,7 +837,7 @@ object ApplicationMaster extends Logging {
   private val EXIT_EARLY = 16
 
   private var master: ApplicationMaster = _
-
+  //ApplicationMaster 方法入口
   def main(args: Array[String]): Unit = {
     SignalUtils.registerLogger(log)
     val amArgs = new ApplicationMasterArguments(args)
@@ -853,6 +857,7 @@ object ApplicationMaster extends Logging {
     }
 
     val yarnConf = new YarnConfiguration(SparkHadoopUtil.newConfiguration(sparkConf))
+    //核心方法，new ApplicationMaster
     master = new ApplicationMaster(amArgs, sparkConf, yarnConf)
 
     val ugi = sparkConf.get(PRINCIPAL) match {
@@ -872,6 +877,7 @@ object ApplicationMaster extends Logging {
     }
 
     ugi.doAs(new PrivilegedExceptionAction[Unit]() {
+      //核心方法，master.run
       override def run(): Unit = System.exit(master.run())
     })
   }

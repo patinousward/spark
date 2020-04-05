@@ -76,6 +76,7 @@ private[spark] class CoarseGrainedExecutorBackend(
     rpcEnv.asyncSetupEndpointRefByURI(driverUrl).flatMap { ref =>
       // This is a very fast action so we can use "ThreadUtils.sameThread"
       driver = Some(ref)
+      //通过rpc向driver方向注册
       ref.ask[Boolean](RegisterExecutor(executorId, self, hostname, cores, extractLogUrls,
         extractAttributes, resources))
     }(ThreadUtils.sameThread).onComplete {
@@ -125,6 +126,7 @@ private[spark] class CoarseGrainedExecutorBackend(
     case RegisteredExecutor =>
       logInfo("Successfully registered with driver")
       try {
+        //executro反向注册后，收到dirver的回复，进而创建executor
         executor = new Executor(executorId, hostname, env, userClassPath, isLocal = false)
       } catch {
         case NonFatal(e) =>
@@ -141,6 +143,7 @@ private[spark] class CoarseGrainedExecutorBackend(
         val taskDesc = TaskDescription.decode(data.value)
         logInfo("Got assigned task " + taskDesc.taskId)
         taskResources(taskDesc.taskId) = taskDesc.resources
+        //执行task的核心方法
         executor.launchTask(this, taskDesc)
       }
 
@@ -241,6 +244,7 @@ private[spark] object CoarseGrainedExecutorBackend extends Logging {
         arguments.hostname, arguments.cores, arguments.userClassPath, env,
         arguments.resourcesFileOpt)
     }
+    //核心方法
     run(parseArguments(args, this.getClass.getCanonicalName.stripSuffix("$")), createFn)
     System.exit(0)
   }
