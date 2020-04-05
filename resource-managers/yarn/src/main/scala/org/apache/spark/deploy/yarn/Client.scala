@@ -69,7 +69,7 @@ private[spark] class Client(
   import Client._
   import YarnSparkHadoopUtil._
 
-  private val yarnClient = YarnClient.createYarnClient
+  private val yarnClient = YarnClient.createYarnClient //hadoop的yarnClient
   private val hadoopConf = new YarnConfiguration(SparkHadoopUtil.newConfiguration(sparkConf))
 
   private val isClusterMode = sparkConf.get(SUBMIT_DEPLOY_MODE) == "cluster"
@@ -193,11 +193,14 @@ private[spark] class Client(
       verifyClusterResources(newAppResponse)
 
       // Set up the appropriate contexts to launch our AM
+      //创建一个containercontext：本质上是一个java command，
       val containerContext = createContainerLaunchContext(newAppResponse)
+      //创建一个ApplicationSubmissioncontext
       val appContext = createApplicationSubmissionContext(newApp, containerContext)
 
       // Finally, submit and monitor the application
       logInfo(s"Submitting application $appId to ResourceManager")
+      //核心方法：后续看ApplicationMaster 的main方法即可
       yarnClient.submitApplication(appContext)
       launcherBackend.setAppId(appId.toString)
       reportLauncherState(SparkAppHandle.State.SUBMITTED)
@@ -969,8 +972,11 @@ private[spark] class Client(
       }
     val amClass =
       if (isClusterMode) {
+        //就是ApplicationMaster。。看源码当前是走的cluster
         Utils.classForName("org.apache.spark.deploy.yarn.ApplicationMaster").getName
       } else {
+        //ExecutorLauncher 的main方法，调用的也是ApplicationMaster的main方法
+        //这里的client  比如直接执行spark-shell --master yarn？ 但是肯定不是linkis这种，这种走的是main方法
         Utils.classForName("org.apache.spark.deploy.yarn.ExecutorLauncher").getName
       }
     if (args.primaryRFile != null &&
@@ -1166,6 +1172,7 @@ private[spark] class Client(
    * throw an appropriate SparkException.
    */
   def run(): Unit = {
+    //获取applicationId，核心方法
     this.appId = submitApplication()
     if (!launcherBackend.isConnected() && fireAndForget) {
       val report = getApplicationReport(appId)
