@@ -96,6 +96,7 @@ private[spark] trait ListenerBus[L <: AnyRef, E] extends Logging {
         null
       }
       try {
+        //核心方法
         doPostEvent(listener, event)
         if (Thread.interrupted()) {
           // We want to throw the InterruptedException right away so we can associate the interrupt
@@ -121,6 +122,7 @@ private[spark] trait ListenerBus[L <: AnyRef, E] extends Logging {
    * Post an event to the specified listener. `onPostEvent` is guaranteed to be called in the same
    * thread for all listeners.
    */
+  //核心是sparkListenerBus这个子类的方法
   protected def doPostEvent(listener: L, event: E): Unit
 
   /** Allows bus implementations to prevent error logging for certain exceptions. */

@@ -90,6 +90,7 @@ private class AsyncEventQueue(
   private val dispatchThread = new Thread(s"spark-listener-group-$name") {
     setDaemon(true)
     override def run(): Unit = Utils.tryOrStopSparkContext(sc) {
+      //核心方法
       dispatch()
     }
   }
@@ -99,6 +100,7 @@ private class AsyncEventQueue(
     while (next != POISON_PILL) {
       val ctx = processingTime.time()
       try {
+        //核心方法
         super.postToAll(next)
       } finally {
         ctx.stop()

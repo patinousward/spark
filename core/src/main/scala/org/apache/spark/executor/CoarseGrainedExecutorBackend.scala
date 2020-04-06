@@ -135,7 +135,7 @@ private[spark] class CoarseGrainedExecutorBackend(
 
     case RegisterExecutorFailed(message) =>
       exitExecutor(1, "Slave registration failed: " + message)
-
+    //接受driver的task
     case LaunchTask(data) =>
       if (executor == null) {
         exitExecutor(1, "Received LaunchTask command but executor was null")
@@ -143,7 +143,7 @@ private[spark] class CoarseGrainedExecutorBackend(
         val taskDesc = TaskDescription.decode(data.value)
         logInfo("Got assigned task " + taskDesc.taskId)
         taskResources(taskDesc.taskId) = taskDesc.resources
-        //执行task的核心方法
+        //执行task的核心方法，backen将任务发给executor
         executor.launchTask(this, taskDesc)
       }
 

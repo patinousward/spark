@@ -24,7 +24,7 @@ import org.apache.spark.util.ListenerBus
  */
 private[spark] trait SparkListenerBus
   extends ListenerBus[SparkListenerInterface, SparkListenerEvent] {
-
+  //listenerBus核心接收方法
   protected override def doPostEvent(
       listener: SparkListenerInterface,
       event: SparkListenerEvent): Unit = {

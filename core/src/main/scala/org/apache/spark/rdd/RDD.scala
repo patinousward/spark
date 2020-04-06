@@ -1000,7 +1000,9 @@ abstract class RDD[T: ClassTag](
    * @note This method should only be used if the resulting array is expected to be small, as
    * all the data is loaded into the driver's memory.
    */
+    //行动算子 action的阅读入口
   def collect(): Array[T] = withScope {
+      //核心方法
     val results = sc.runJob(this, (iter: Iterator[T]) => iter.toArray)
     Array.concat(results: _*)
   }
