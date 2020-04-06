@@ -49,13 +49,16 @@ private[spark] class ShuffleWriteProcessor extends Serializable with Logging {
       partition: Partition): MapStatus = {
     var writer: ShuffleWriter[Any, Any] = null
     try {
+      //核心，获取shuffleManager，目前只有SortShuffleManager这个实现类
       val manager = SparkEnv.get.shuffleManager
       writer = manager.getWriter[Any, Any](
         dep.shuffleHandle,
         mapId,
         context,
         createMetricsReporter(context))
+      //核心方法，shufflewriter有几个子类：BypassMergeSortShuffleWriter,UnsafeShuffleWriter,SortShuffleWriter
       writer.write(
+        //rdd iterator的时候触发的读
         rdd.iterator(partition, context).asInstanceOf[Iterator[_ <: Product2[Any, Any]]])
       writer.stop(success = true).get
     } catch {

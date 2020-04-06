@@ -229,6 +229,7 @@ private[spark] class Executor(
   private[executor] def numRunningTasks: Int = runningTasks.size()
 
   def launchTask(context: ExecutorBackend, taskDescription: TaskDescription): Unit = {
+    //这里看taskRunner的方法即可
     val tr = new TaskRunner(context, taskDescription)
     runningTasks.put(taskDescription.taskId, tr)
     threadPool.execute(tr)
@@ -390,6 +391,7 @@ private[spark] class Executor(
     }
 
     override def run(): Unit = {
+      //核心方法
       threadId = Thread.currentThread.getId
       Thread.currentThread.setName(threadName)
       val threadMXBean = ManagementFactory.getThreadMXBean
@@ -448,6 +450,7 @@ private[spark] class Executor(
         } else 0L
         var threwException = true
         val value = Utils.tryWithSafeFinally {
+          //核心方法，task.run 这里的task 指的是shuffleMaptask 类和resultTask
           val res = task.run(
             taskAttemptId = taskId,
             attemptNumber = taskDescription.attemptNumber,

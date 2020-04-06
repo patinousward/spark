@@ -86,7 +86,7 @@ private[spark] class ResultTask[T, U](
     _executorDeserializeCpuTime = if (threadMXBean.isCurrentThreadCpuTimeSupported) {
       threadMXBean.getCurrentThreadCpuTime - deserializeStartCpuTime
     } else 0L
-
+    //核心方法，resultTask是读文件，在rdd.iterator中进行
     func(context, rdd.iterator(partition, context))
   }
 

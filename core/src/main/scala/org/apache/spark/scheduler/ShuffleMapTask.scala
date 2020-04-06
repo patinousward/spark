@@ -96,6 +96,7 @@ private[spark] class ShuffleMapTask(
     val mapId = if (SparkEnv.get.conf.get(config.SHUFFLE_USE_OLD_FETCH_PROTOCOL)) {
       partitionId
     } else context.taskAttemptId()
+    //写操作，这里write会触发rdd的iterator，也就是读操作
     dep.shuffleWriterProcessor.write(rdd, dep, mapId, context, partition)
   }
 

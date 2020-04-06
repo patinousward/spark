@@ -307,7 +307,9 @@ abstract class RDD[T: ClassTag](
    * subclasses of RDD.
    */
   final def iterator(split: Partition, context: TaskContext): Iterator[T] = {
+    //存储级别是否是NOne
     if (storageLevel != StorageLevel.NONE) {
+      //核心方法
       getOrCompute(split, context)
     } else {
       computeOrReadCheckpoint(split, context)
@@ -346,6 +348,7 @@ abstract class RDD[T: ClassTag](
     if (isCheckpointedAndMaterialized) {
       firstParent[T].iterator(split, context)
     } else {
+      //核心方法
       compute(split, context)
     }
   }
@@ -359,6 +362,7 @@ abstract class RDD[T: ClassTag](
     // This method is called on executors, so we need call SparkEnv.get instead of sc.env.
     SparkEnv.get.blockManager.getOrElseUpdate(blockId, storageLevel, elementClassTag, () => {
       readCachedBlock = false
+      //核心方法
       computeOrReadCheckpoint(partition, context)
     }) match {
       case Left(blockResult) =>

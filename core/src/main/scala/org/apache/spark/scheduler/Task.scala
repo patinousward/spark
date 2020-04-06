@@ -124,6 +124,7 @@ private[spark] abstract class Task[T](
       Option(attemptNumber)).setCurrentContext()
 
     try {
+      //核心方法
       runTask(context)
     } catch {
       case e: Throwable =>
